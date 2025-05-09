@@ -50,7 +50,8 @@ public abstract class Controllable extends ObjectWithPosition {
         if (!GameModel.isInBounds(this)) {
             x = tempX;
             y = tempY;
-            throw new BoundaryExceededException("Cannot move " + direction.name().toLowerCase() + ". Out of bounds!");
+            throw new BoundaryExceededException("Cannot move "
+                    + direction.name().toLowerCase() + ". Out of bounds!");
         }
     }
 }

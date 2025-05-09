@@ -184,8 +184,8 @@ public class GameModel {
      *            spawn condition and the coordinate is free.
      */
     public void spawnObjects() {
-        // Spawn asteroids with a chance determined by spawnRate
 
+        // Spawn asteroids with a chance determined by spawnRate
         if (random.nextInt(100) < spawnRate) {
             int x = random.nextInt(GAME_WIDTH); // Random x-coordinate
             int y = 0; // Spawn at the top of the screen

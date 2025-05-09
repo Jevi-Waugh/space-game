@@ -1,5 +1,6 @@
 package game.core;
 
+import game.GameModel;
 import game.exceptions.BoundaryExceededException;
 import game.utility.Direction;
 import static game.GameModel.*;
@@ -36,31 +37,20 @@ public abstract class Controllable extends ObjectWithPosition {
      * @hint game dimensions are stored in the model.
      */
     public void move(Direction direction) throws BoundaryExceededException {
+        int tempX = this.x;
+        int tempY = this.y;
+
         switch (direction) {
-            case UP -> {
-                if (y <= 0) {
-                    throw new BoundaryExceededException("Cannot move up. Out of bounds!");
-                }
-                y--;
-            }
-            case DOWN -> {
-                if (y + 1 >= GAME_HEIGHT) {
-                    throw new BoundaryExceededException("Cannot move down. Out of bounds!");
-                }
-                y++;
-            }
-            case LEFT -> {
-                if (x <= 0) {
-                    throw new BoundaryExceededException("Cannot move left. Out of bounds!");
-                }
-                x--;
-            }
-            case RIGHT -> {
-                if (x + 1 >= GAME_WIDTH) {
-                    throw new BoundaryExceededException("Cannot move right. Out of bounds!");
-                }
-                x++;
-            }
+            case UP -> y--;
+            case DOWN -> y++;
+            case LEFT -> x--;
+            case RIGHT -> x++;
+        }
+
+        if (!GameModel.isInBounds(this)) {
+            x = tempX;
+            y = tempY;
+            throw new BoundaryExceededException("Cannot move " + direction.name().toLowerCase() + ". Out of bounds!");
         }
     }
 }

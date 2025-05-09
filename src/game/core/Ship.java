@@ -12,7 +12,7 @@ public class Ship extends Controllable {
     private static final int STARTING_X = 5;
     private static final int STARTING_Y = 10;
     private int health;
-    private int score;
+    private int score = 0;
 
     /**
      * Constructs a Ship with the specified position and health.

@@ -1,0 +1,12 @@
+package game.core;
+
+import org.junit.Test;
+
+import static org.junit.Assert.*;
+
+public class ObjectWithPositionTest {
+
+    @Test
+    public void testToString() {
+    }
+}

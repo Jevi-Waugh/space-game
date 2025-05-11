@@ -12,7 +12,7 @@ public class ShieldPowerUpTest {
 
     @Before
     public void setUp() {
-        shieldPowerUp = new ShieldPowerUp(5, 10);
+        shieldPowerUp = new ShieldPowerUp(10, 10);
         ship = new Ship();
 
     }
@@ -35,6 +35,14 @@ public class ShieldPowerUpTest {
     @Test(expected = NullPointerException.class)
     public void testApplyEffectWithNullShipThrowException() {
         shieldPowerUp.applyEffect(null);
+    }
+
+
+    @Test
+    public void testApplyEffectWithNegativeShipScore() {
+        ship.addScore(-50);
+        shieldPowerUp.applyEffect(ship);
+        assertEquals(0, ship.getScore());
     }
 
 

@@ -36,6 +36,7 @@ public abstract class ObjectWithPosition implements SpaceObject {
 
     /**
      * Returns a string representation of the Object.
+     * @requires x != null && y != null
      * @ensures the class name and current position is returned as ClassName(x,y)
      * @return a string identifying the object's name and current position, eg. Bullet(2, 4)
      */

@@ -22,14 +22,14 @@ public class GameControllerTest {
 
     // ------------MANUALLY MOCKING CLASSES-----------------
     private static class TestUI implements UI {
-        boolean isPaused = false;
+        boolean paused = false;
         int counter = 0;
         String lastLog = "";
         List<String> logs = new ArrayList<>();
 
         @Override
         public void pause() {
-            isPaused = true;
+            paused = true;
             counter++;
         }
 
@@ -46,7 +46,7 @@ public class GameControllerTest {
         public void onKey(game.ui.KeyHandler k) {}
         public void render(java.util.List list) {}
         public void setStat(String a, String b) {}
-        public void logAchievementMastered(String msg) {}
+        public void logAchievementMastered(String message) {}
         public void logAchievements(java.util.List<game.achievements.Achievement> achievements) {}
         public void setAchievementProgressStat(String achievementName, double progressPercentage) {}
     }
@@ -55,7 +55,7 @@ public class GameControllerTest {
         boolean verboseSet = false;
 
         public TestGameModel() {
-            super((msg) -> {}, new PlayerStatsTracker());
+            super((message) -> {}, new PlayerStatsTracker());
         }
 
         @Override
@@ -83,7 +83,7 @@ public class GameControllerTest {
 
         @Override
         public void save(String achievementName) {
-            // no-op
+            // no-operation
         }
 
         @Override
@@ -96,8 +96,8 @@ public class GameControllerTest {
 
     private static class TestGameModelAndShip extends GameModel {
         static String lastCall = null;
-        static boolean fireBulletCalled = false;
-        static boolean recordShotFiredCalled = false;
+        static boolean fireBullet = false;
+        static boolean recordShotFired = false;
 
         TestShip ship = new TestShip();
 
@@ -112,12 +112,12 @@ public class GameControllerTest {
 
         @Override
         public void fireBullet() {
-            fireBulletCalled = true;
+            fireBullet = true;
         }
 
         @Override
         public PlayerStatsTracker getStatsTracker() {
-            return (PlayerStatsTracker) super.getStatsTracker(); // returns our test subclass
+            return (PlayerStatsTracker) super.getStatsTracker();
         }
 
         @Override
@@ -132,6 +132,12 @@ public class GameControllerTest {
 
             @Override
             public void move(Direction direction) {
+                switch (direction) {
+                    case UP -> y--;
+                    case DOWN -> y++;
+                    case LEFT -> x--;
+                    case RIGHT -> x++;
+                }
                 lastCall = direction.name();
             }
         }
@@ -139,7 +145,7 @@ public class GameControllerTest {
         static class TestPlayerStatsTracker extends PlayerStatsTracker {
             @Override
             public void recordShotFired() {
-                recordShotFiredCalled = true;
+                recordShotFired = true;
             }
         }
     }
@@ -171,7 +177,7 @@ public class GameControllerTest {
         // paused is initially false
         // now it is true
         controller.pauseGame();
-        assertTrue(testUI.isPaused);
+        assertTrue(testUI.paused);
         assertEquals("Game paused.", testUI.lastLog);
     }
 
@@ -277,12 +283,19 @@ public class GameControllerTest {
     }
 
     @Test
-    public void testHandlePlayerInputFireBulletAndRecordShot() {
-        controller = new GameController(testUI, new TestGameModelAndShip(), new TestAchievementManager());
-        controller.handlePlayerInput("F");
+    public void testHandlePlayerInputFire() {
+        String[] fire = {"F", "f"};
+        for (String input : fire) {
+            TestGameModelAndShip.fireBullet = false;
+            TestGameModelAndShip.recordShotFired = false;
 
-        assertTrue(TestGameModelAndShip.fireBulletCalled);
-        assertTrue(TestGameModelAndShip.recordShotFiredCalled);
+            controller = new GameController(testUI, new TestGameModelAndShip(), new TestAchievementManager());
+
+            controller.handlePlayerInput(input);
+
+            assertTrue("Fails due to " + input, TestGameModelAndShip.fireBullet);
+            assertTrue("Fails due to " + input, TestGameModelAndShip.recordShotFired);
+        }
     }
 
     @Test
@@ -313,6 +326,41 @@ public class GameControllerTest {
         // Movement should be ignored
         assertNull(TestGameModelAndShip.lastCall);
     }
+
+    @Test
+    public void testPrintShipMovingLoggingWhenVerboseIsTrue() {
+        TestGameModelAndShip.lastCall = null;
+        controller = new GameController(testUI, new TestGameModelAndShip(), new TestAchievementManager());
+
+        controller.setVerbose(true);
+        controller.handlePlayerInput("W");
+
+        String expected = "Ship moved to (10, 9)";
+        assertTrue(testUI.logs.contains(expected));
+    }
+
+    @Test
+    public void testPrintShipMovingLoggingWhenVerboseIsFalse() {
+        TestGameModelAndShip.lastCall = null;
+        controller = new GameController(testUI, new TestGameModelAndShip(), new TestAchievementManager());
+        controller.handlePlayerInput("W");
+
+        String expected = "Ship moved to (10, 9)";
+        assertFalse(testUI.logs.contains(expected));
+    }
+
+    @Test
+    public void testMoreThanOneInput() {
+        controller = new GameController(testUI, new TestGameModelAndShip(), new TestAchievementManager());
+        controller.handlePlayerInput("aa");
+
+        String expected = "Invalid input. Use W, A, S, D, F, or P.";
+        assertTrue(testUI.logs.contains(expected));
+    }
+
+
+
+
 
 
 

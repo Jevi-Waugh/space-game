@@ -2,7 +2,9 @@ package game;
 
 import game.achievements.AchievementManager;
 import game.achievements.PlayerStatsTracker;
+import game.core.Ship;
 import game.ui.UI;
+import game.utility.Direction;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -18,7 +20,132 @@ public class GameControllerTest {
     private TestUI testUI;
     private TestGameModel testModel;
 
+    // ------------MANUALLY MOCKING CLASSES-----------------
+    private static class TestUI implements UI {
+        boolean isPaused = false;
+        int counter = 0;
+        String lastLog = "";
+        List<String> logs = new ArrayList<>();
 
+        @Override
+        public void pause() {
+            isPaused = true;
+            counter++;
+        }
+
+        @Override
+        public void log(String message) {
+            lastLog = message;
+            logs.add(message);
+        }
+
+        // Unused methods with empty bodies
+        public void start() {}
+        public void stop() {}
+        public void onStep(game.ui.Tickable t) {}
+        public void onKey(game.ui.KeyHandler k) {}
+        public void render(java.util.List list) {}
+        public void setStat(String a, String b) {}
+        public void logAchievementMastered(String msg) {}
+        public void logAchievements(java.util.List<game.achievements.Achievement> achievements) {}
+        public void setAchievementProgressStat(String achievementName, double progressPercentage) {}
+    }
+
+    private static class TestGameModel extends GameModel {
+        boolean verboseSet = false;
+
+        public TestGameModel() {
+            super((msg) -> {}, new PlayerStatsTracker());
+        }
+
+        @Override
+        public void setVerbose(boolean verbose) {
+            this.verboseSet = verbose;
+        }
+    }
+
+    private static class TestAchievementManager extends AchievementManager {
+        public TestAchievementManager() {
+            super(new TestAchievementFile());
+        }
+    }
+
+    private static class TestAchievementFile implements game.achievements.AchievementFile {
+        @Override
+        public void setFileLocation(String fileLocation) {
+
+        }
+
+        @Override
+        public String getFileLocation() {
+            return "";
+        }
+
+        @Override
+        public void save(String achievementName) {
+            // no-op
+        }
+
+        @Override
+        public List<String> read() {
+            return List.of();
+        }
+
+
+    }
+
+    private static class TestGameModelAndShip extends GameModel {
+        static String lastCall = null;
+        static boolean fireBulletCalled = false;
+        static boolean recordShotFiredCalled = false;
+
+        TestShip ship = new TestShip();
+
+        public TestGameModelAndShip() {
+            super(message -> {}, new TestPlayerStatsTracker());
+        }
+
+        @Override
+        public Ship getShip() {
+            return ship;
+        }
+
+        @Override
+        public void fireBullet() {
+            fireBulletCalled = true;
+        }
+
+        @Override
+        public PlayerStatsTracker getStatsTracker() {
+            return (PlayerStatsTracker) super.getStatsTracker(); // returns our test subclass
+        }
+
+        @Override
+        public void checkCollisions() {
+            lastCall += " and some collision";
+        }
+
+        static class TestShip extends Ship {
+            public TestShip() {
+                super(10, 10, 100);
+            }
+
+            @Override
+            public void move(Direction direction) {
+                lastCall = direction.name();
+            }
+        }
+
+        static class TestPlayerStatsTracker extends PlayerStatsTracker {
+            @Override
+            public void recordShotFired() {
+                recordShotFiredCalled = true;
+            }
+        }
+    }
+
+
+    //-------------SETUP------------------
     @Before
     public void setUp() {
         testUI = new TestUI();
@@ -100,79 +227,97 @@ public class GameControllerTest {
         assertEquals(AchievementManager.class, field.getType());
 
     }
-
-    private static class TestUI implements UI {
-        boolean isPaused = false;
-        int counter = 0;
-        String lastLog = "";
-        List<String> logs = new ArrayList<>();
-
-        @Override
-        public void pause() {
-            isPaused = true;
-            counter++;
+    //-----------------HANDLE PLAYER INPUT---------------------
+    @Test
+    public void testHandlePlayerInputUp() {
+        String[] up = {"W", "w"};
+        for (String input: up) {
+            TestGameModelAndShip.lastCall = null;
+            controller = new GameController(new TestUI(), new TestGameModelAndShip(), new TestAchievementManager());
+            controller.handlePlayerInput(input);
+            assertEquals("Fails due to" + input, "UP and some collision", TestGameModelAndShip.lastCall);
         }
 
-        @Override
-        public void log(String message) {
-            lastLog = message;
-            logs.add(message);
-        }
-
-        // Unused methods with empty bodies
-        public void start() {}
-        public void stop() {}
-        public void onStep(game.ui.Tickable t) {}
-        public void onKey(game.ui.KeyHandler k) {}
-        public void render(java.util.List list) {}
-        public void setStat(String a, String b) {}
-        public void logAchievementMastered(String msg) {}
-        public void logAchievements(java.util.List<game.achievements.Achievement> achievements) {}
-        public void setAchievementProgressStat(String achievementName, double progressPercentage) {}
     }
 
-    private static class TestGameModel extends GameModel {
-        boolean verboseSet = false;
-
-        public TestGameModel() {
-            super((msg) -> {}, new PlayerStatsTracker());
+    @Test
+    public void testHandlePlayerInputDown() {
+        String[] down = {"S", "s"};
+        for (String input: down) {
+            TestGameModelAndShip.lastCall = null;
+            controller = new GameController(new TestUI(), new TestGameModelAndShip(), new TestAchievementManager());
+            controller.handlePlayerInput(input);
+            assertEquals("Fails due to" + input, "DOWN and some collision", TestGameModelAndShip.lastCall);
         }
 
-        @Override
-        public void setVerbose(boolean verbose) {
-            this.verboseSet = verbose;
-        }
     }
 
-    private static class TestAchievementManager extends AchievementManager {
-        public TestAchievementManager() {
-            super(new TestAchievementFile());
+    @Test
+    public void testHandlePlayerInputLeft() {
+        String[] left = {"A", "a"};
+        for (String input: left) {
+            TestGameModelAndShip.lastCall = null;
+            controller = new GameController(new TestUI(), new TestGameModelAndShip(), new TestAchievementManager());
+            controller.handlePlayerInput(input);
+            assertEquals("Fails due to" + input, "LEFT and some collision", TestGameModelAndShip.lastCall);
         }
+
     }
 
-    private static class TestAchievementFile implements game.achievements.AchievementFile {
-        @Override
-        public void setFileLocation(String fileLocation) {
-
+    @Test
+    public void testHandlePlayerInputRight() {
+        String[] right = {"D", "d"};
+        for (String input: right) {
+            TestGameModelAndShip.lastCall = null;
+            controller = new GameController(new TestUI(), new TestGameModelAndShip(), new TestAchievementManager());
+            controller.handlePlayerInput(input);
+            assertEquals("Fails due to" + input, "RIGHT and some collision", TestGameModelAndShip.lastCall);
         }
-
-        @Override
-        public String getFileLocation() {
-            return "";
-        }
-
-        @Override
-        public void save(String achievementName) {
-            // no-op
-        }
-
-        @Override
-        public List<String> read() {
-            return List.of();
-        }
-
 
     }
+
+    @Test
+    public void testHandlePlayerInputFireBulletAndRecordShot() {
+        controller = new GameController(testUI, new TestGameModelAndShip(), new TestAchievementManager());
+        controller.handlePlayerInput("F");
+
+        assertTrue(TestGameModelAndShip.fireBulletCalled);
+        assertTrue(TestGameModelAndShip.recordShotFiredCalled);
+    }
+
+    @Test
+    public void testHandlePlayerInputInvalidInput() {
+        String[] invalidInput = {"Z", "z"};
+        for (String input: invalidInput) {
+            TestGameModelAndShip.lastCall = null;
+            TestUI ui = new TestUI();
+            controller = new GameController(ui, new TestGameModelAndShip(), new TestAchievementManager());
+            controller.handlePlayerInput(input);
+            assertEquals("Invalid input. Use W, A, S, D, F, or P.", ui.lastLog);
+        }
+
+    }
+
+    @Test
+    public void testHandlePlayerInputWhilePausedIsIgnored() throws Exception {
+        TestGameModelAndShip.lastCall = null;
+        controller = new GameController(testUI, new TestGameModelAndShip(), new TestAchievementManager());
+
+        // Pause the game
+        controller.pauseGame();
+
+        // Try moving while paused
+        controller.handlePlayerInput("A");
+        controller.handlePlayerInput("a");
+
+        // Movement should be ignored
+        assertNull(TestGameModelAndShip.lastCall);
+    }
+
+
+
+
+
 
 
 

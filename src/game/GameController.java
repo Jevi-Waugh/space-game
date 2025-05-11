@@ -335,8 +335,9 @@ public class GameController {
      */
     public void handlePlayerInput(String input) {
 
+        String invalidInput = "Invalid input. Use W, A, S, D, F, or P.";
         if (!validInput(input)) {
-            ui.log("Invalid input. Use W, A, S, D, F, or P.");
+            ui.log(invalidInput);
             return;
         }
         String command = input.toUpperCase();
@@ -356,7 +357,7 @@ public class GameController {
                 model.fireBullet();
                 model.getStatsTracker().recordShotFired();
             }
-            default -> ui.log("Invalid input. Use W, A, S, D, F, or P.");
+            default -> ui.log(invalidInput);
         }
     }
 
@@ -371,12 +372,15 @@ public class GameController {
         paused = !paused;
 
         if (paused) {
-            ui.log("Game paused.");
+            String gamePaused = "Game paused.";
+            ui.log(gamePaused);
 
         } else {
             // according to the spec must write this instead of game resumed.
-            ui.log("Game unpaused.");
+            String resume = "Game unpaused.";
+            ui.log(resume);
         }
     }
+
 }
 

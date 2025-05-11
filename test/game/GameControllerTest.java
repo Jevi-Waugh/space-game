@@ -1,31 +1,30 @@
 package game;
 
-import game.GameController;
-import game.GameModel;
 import game.achievements.AchievementManager;
-
+import game.achievements.PlayerStatsTracker;
 import game.ui.UI;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
 
 public class GameControllerTest {
 
     private GameController controller;
-    private UI mockGui;
-    private GameModel mockModel;
+    private TestUI testUI;
+    private TestGameModel testModel;
+
 
     @Before
     public void setUp() {
-        mockGui = mock(UI.class);
-        AchievementManager mockAchievements = mock(AchievementManager.class);
-        mockModel = mock(GameModel.class);
-        controller = new GameController(mockGui, mockModel, mockAchievements);
-
+        testUI = new TestUI();
+        testModel = new TestGameModel();
+        TestAchievementManager testAchievements = new TestAchievementManager();
+        controller = new GameController(testUI, testModel, testAchievements);
     }
     //-------------TEST PAUSE METHOD-------------------
 
@@ -45,8 +44,8 @@ public class GameControllerTest {
         // paused is initially false
         // now it is true
         controller.pauseGame();
-        verify(mockGui).pause();
-        verify(mockGui).log("Game paused.");
+        assertTrue(testUI.isPaused);
+        assertEquals("Game paused.", testUI.lastLog);
     }
 
 
@@ -57,10 +56,9 @@ public class GameControllerTest {
         // now should unpause
         controller.pauseGame();
 
-        verify(mockGui, times(2)).pause();
-        verify(mockGui).log("Game paused.");
-        // correct second message
-        verify(mockGui).log("Game unpaused.");
+        assertEquals(2, testUI.counter);
+        assertTrue(testUI.logs.contains("Game paused."));
+        assertTrue(testUI.logs.contains("Game unpaused."));
     }
 
     //-------------TEST VERBOSE-------------------
@@ -79,10 +77,9 @@ public class GameControllerTest {
         controller.setVerbose(true);
         Field verbose = GameController.class.getDeclaredField("isVerbose");
         verbose.setAccessible(true);
-
         boolean value = (boolean) verbose.get(controller);
         assertTrue(value);
-        verify(mockModel).setVerbose(true);
+        assertTrue(testModel.verboseSet);
     }
 
     //---------------------startTime-------------
@@ -103,6 +100,80 @@ public class GameControllerTest {
         assertEquals(AchievementManager.class, field.getType());
 
     }
+
+    private static class TestUI implements UI {
+        boolean isPaused = false;
+        int counter = 0;
+        String lastLog = "";
+        List<String> logs = new ArrayList<>();
+
+        @Override
+        public void pause() {
+            isPaused = true;
+            counter++;
+        }
+
+        @Override
+        public void log(String message) {
+            lastLog = message;
+            logs.add(message);
+        }
+
+        // Unused methods with empty bodies
+        public void start() {}
+        public void stop() {}
+        public void onStep(game.ui.Tickable t) {}
+        public void onKey(game.ui.KeyHandler k) {}
+        public void render(java.util.List list) {}
+        public void setStat(String a, String b) {}
+        public void logAchievementMastered(String msg) {}
+        public void logAchievements(java.util.List<game.achievements.Achievement> achievements) {}
+        public void setAchievementProgressStat(String achievementName, double progressPercentage) {}
+    }
+
+    private static class TestGameModel extends GameModel {
+        boolean verboseSet = false;
+
+        public TestGameModel() {
+            super((msg) -> {}, new PlayerStatsTracker());
+        }
+
+        @Override
+        public void setVerbose(boolean verbose) {
+            this.verboseSet = verbose;
+        }
+    }
+
+    private static class TestAchievementManager extends AchievementManager {
+        public TestAchievementManager() {
+            super(new TestAchievementFile());
+        }
+    }
+
+    private static class TestAchievementFile implements game.achievements.AchievementFile {
+        @Override
+        public void setFileLocation(String fileLocation) {
+
+        }
+
+        @Override
+        public String getFileLocation() {
+            return "";
+        }
+
+        @Override
+        public void save(String achievementName) {
+            // no-op
+        }
+
+        @Override
+        public List<String> read() {
+            return List.of();
+        }
+
+
+    }
+
 
 
 }

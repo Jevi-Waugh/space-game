@@ -5,6 +5,8 @@ import game.core.Ship;
 
 import static org.junit.Assert.*;
 
+import game.exceptions.BoundaryExceededException;
+import game.utility.Direction;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -32,6 +34,17 @@ public class ShipTest {
     public void testHealthEqualsHundred() {
         assertEquals(100, ship.getHealth());
     }
+
+    @Test
+    public void testShipCanMoveUpFromDefaultPosition() throws BoundaryExceededException {
+        Ship ship= new Ship();
+        System.out.println("Before moving: y =" + ship.getY());
+        ship.move(Direction.UP);
+        System.out.println("After moving: y =" + ship.getY());
+        assertEquals(9, ship.getY());
+    }
+
+
 
 
 }

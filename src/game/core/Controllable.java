@@ -36,7 +36,7 @@ public abstract class Controllable extends ObjectWithPosition {
      * @throws BoundaryExceededException if attempting to move outside the game boundaries.
      * @hint game dimensions are stored in the model.
      */
-    public void move(Direction direction) throws ExceptionInInitializerError {
+    public void move(Direction direction) throws BoundaryExceededException {
         int tempX = this.x;
         int tempY = this.y;
 
@@ -50,7 +50,7 @@ public abstract class Controllable extends ObjectWithPosition {
         if (!GameModel.isInBounds(this)) {
             x = tempX;
             y = tempY;
-            throw new ExceptionInInitializerError("Cannot move "
+            throw new BoundaryExceededException("Cannot move "
                     + direction.name().toLowerCase() + ". Out of bounds!");
         }
     }

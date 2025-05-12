@@ -132,29 +132,39 @@ public class GameModelTest {
     private int getScoreThreshold() throws Exception {
         Field ScoreThreshField = GameModel.class.getDeclaredField("SCORE_THRESHOLD");
         ScoreThreshField.setAccessible(true);
-        return ScoreThreshField.getInt(null); // static field
+        return ScoreThreshField.getInt(null);
     }
 
     private int getSpawnRateIncrease() throws Exception {
         Field rateIncreaseField = GameModel.class.getDeclaredField("SPAWN_RATE_INCREASE");
         rateIncreaseField.setAccessible(true);
-        return rateIncreaseField.getInt(null); // static field
+        return rateIncreaseField.getInt(null);
     }
 
     @Test
     public void testLevelUpAtExactlyTheThreshold() throws Exception {
         // (ship.getScore() equals (lvl * SCORE_THRESHOLD))
-        int threshold = getLevel() * getScoreThreshold();
+        int lvlBefore = getLevel();
+        int threshold = lvlBefore * getScoreThreshold();
         ship.addScore(threshold);
 
         model.levelUp();
         // model started at 1
-        assertEquals(2, getLevel());
+        assertEquals("Level should be incremented by one more when score reaches the threshold exactly", lvlBefore+1, getLevel());
+    }
+
+    @Test
+    public void testLevelUpAboveThreshold() throws Exception {
+        int lvlBefore = getLevel();
+        ship.addScore(lvlBefore * getScoreThreshold() * 100);
+        model.levelUp();
+        assertEquals(lvlBefore+1, getLevel());
     }
 
     @Test
     public void testNoLevelUpIfThresholdIsTooLow() throws Exception {
-        ship.addScore(0); // score = 0
+        // score = 0 
+        ship.addScore(0); 
         int beforeLevel = getLevel();
         int beforeSpawnRate = getSpawnRate();
 
@@ -164,12 +174,7 @@ public class GameModelTest {
         assertEquals(beforeSpawnRate, getSpawnRate());
     }
 
-    @Test
-    public void testLevelUpAboveThreshold() throws Exception {
-        ship.addScore(getLevel() * getScoreThreshold() * 100);
-        model.levelUp();
-        assertEquals(2, getLevel());
-    }
+
 
     @Test
     public void testLevelUpAndSpawnRateIncrement() throws Exception {

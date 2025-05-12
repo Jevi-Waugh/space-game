@@ -162,15 +162,16 @@ public class GameControllerTest {
     //-------------TEST PAUSE METHOD-------------------
 
     @Test
-    public void testPausedReflectionUsed() throws Exception {
-        // checks that pause is initially set to false
-        Field paused = GameController.class.getDeclaredField("paused");
-        // disables java checks
-        paused.setAccessible(true);
+    public void testPausedIsFalseOnNewController() throws Exception {
         GameController newController = new GameController(testUI, testModel, new TestAchievementManager());
+
+        Field paused = GameController.class.getDeclaredField("paused");
+        paused.setAccessible(true);
         boolean value = (boolean) paused.get(newController);
-        assertFalse(value);
+
+        assertFalse("Paused should be false by default when starting a game", value);
     }
+
 
     @Test
     public void testPauseGame() {

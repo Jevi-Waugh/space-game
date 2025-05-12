@@ -95,9 +95,10 @@ public class GameControllerTest {
     }
 
     private static class TestGameModelAndShip extends GameModel {
-        static String lastCall = null;
         static boolean fireBullet = false;
         static boolean recordShotFired = false;
+        static String lastDirection = null;
+        static boolean collisionChecked = false;
 
         TestShip ship = new TestShip();
 
@@ -122,7 +123,7 @@ public class GameControllerTest {
 
         @Override
         public void checkCollisions() {
-            lastCall += " and some collision";
+            collisionChecked = true;
         }
 
         static class TestShip extends Ship {
@@ -138,7 +139,7 @@ public class GameControllerTest {
                     case LEFT -> x--;
                     case RIGHT -> x++;
                 }
-                lastCall = direction.name();
+                lastDirection = direction.name();
             }
         }
 
@@ -239,10 +240,10 @@ public class GameControllerTest {
     public void testHandlePlayerInputUp() {
         String[] up = {"W", "w"};
         for (String input: up) {
-            TestGameModelAndShip.lastCall = null;
+            TestGameModelAndShip.lastDirection = null;
             controller = new GameController(new TestUI(), new TestGameModelAndShip(), new TestAchievementManager());
             controller.handlePlayerInput(input);
-            assertEquals("UP", TestGameModelAndShip.lastCall);
+            assertEquals("UP", TestGameModelAndShip.lastDirection);
         }
 
     }
@@ -251,10 +252,10 @@ public class GameControllerTest {
     public void testHandlePlayerInputDown() {
         String[] down = {"S", "s"};
         for (String input: down) {
-            TestGameModelAndShip.lastCall = null;
+            TestGameModelAndShip.lastDirection = null;
             controller = new GameController(new TestUI(), new TestGameModelAndShip(), new TestAchievementManager());
             controller.handlePlayerInput(input);
-            assertEquals("DOWN", TestGameModelAndShip.lastCall);
+            assertEquals("DOWN", TestGameModelAndShip.lastDirection);
         }
 
     }
@@ -263,10 +264,10 @@ public class GameControllerTest {
     public void testHandlePlayerInputLeft() {
         String[] left = {"A", "a"};
         for (String input: left) {
-            TestGameModelAndShip.lastCall = null;
+            TestGameModelAndShip.lastDirection = null;
             controller = new GameController(new TestUI(), new TestGameModelAndShip(), new TestAchievementManager());
             controller.handlePlayerInput(input);
-            assertEquals("LEFT", TestGameModelAndShip.lastCall);
+            assertEquals("LEFT", TestGameModelAndShip.lastDirection);
         }
 
     }
@@ -275,10 +276,10 @@ public class GameControllerTest {
     public void testHandlePlayerInputRight() {
         String[] right = {"D", "d"};
         for (String input: right) {
-            TestGameModelAndShip.lastCall = null;
+            TestGameModelAndShip.lastDirection = null;
             controller = new GameController(new TestUI(), new TestGameModelAndShip(), new TestAchievementManager());
             controller.handlePlayerInput(input);
-            assertEquals("RIGHT", TestGameModelAndShip.lastCall);
+            assertEquals("RIGHT", TestGameModelAndShip.lastDirection);
         }
 
     }
@@ -294,8 +295,8 @@ public class GameControllerTest {
 
             controller.handlePlayerInput(input);
 
-            assertTrue("Fails due to " + input, TestGameModelAndShip.fireBullet);
-            assertTrue("Fails due to " + input, TestGameModelAndShip.recordShotFired);
+            assertTrue(input, TestGameModelAndShip.fireBullet);
+            assertTrue(input, TestGameModelAndShip.recordShotFired);
         }
     }
 
@@ -303,7 +304,7 @@ public class GameControllerTest {
     public void testHandlePlayerInputInvalidInput() {
         String[] invalidInput = {"Z", "z"};
         for (String input: invalidInput) {
-            TestGameModelAndShip.lastCall = null;
+            TestGameModelAndShip.lastDirection = null;
             TestUI ui = new TestUI();
             controller = new GameController(ui, new TestGameModelAndShip(), new TestAchievementManager());
             controller.handlePlayerInput(input);
@@ -314,7 +315,7 @@ public class GameControllerTest {
 
     @Test
     public void testHandlePlayerInputWhilePausedIsIgnored() throws Exception {
-        TestGameModelAndShip.lastCall = null;
+        TestGameModelAndShip.lastDirection = null;
         controller = new GameController(testUI, new TestGameModelAndShip(), new TestAchievementManager());
 
         // Pause the game
@@ -325,12 +326,12 @@ public class GameControllerTest {
         controller.handlePlayerInput("a");
 
         // Movement should be ignored
-        assertNull(TestGameModelAndShip.lastCall);
+        assertNull(TestGameModelAndShip.lastDirection);
     }
 
     @Test
     public void testPrintShipMovingLoggingWhenVerboseIsTrue() {
-        TestGameModelAndShip.lastCall = null;
+        TestGameModelAndShip.lastDirection = null;
         controller = new GameController(testUI, new TestGameModelAndShip(), new TestAchievementManager());
 
         controller.setVerbose(true);
@@ -342,7 +343,7 @@ public class GameControllerTest {
 
     @Test
     public void testPrintShipMovingLoggingWhenVerboseIsFalse() {
-        TestGameModelAndShip.lastCall = null;
+        TestGameModelAndShip.lastDirection = null;
         controller = new GameController(testUI, new TestGameModelAndShip(), new TestAchievementManager());
         controller.handlePlayerInput("W");
 

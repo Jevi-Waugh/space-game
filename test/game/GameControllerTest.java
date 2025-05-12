@@ -254,7 +254,7 @@ public class GameControllerTest {
             TestGameModelAndShip.lastCall = null;
             controller = new GameController(new TestUI(), new TestGameModelAndShip(), new TestAchievementManager());
             controller.handlePlayerInput(input);
-            assertEquals("Fails due to" + input, "DOWN and some collision", TestGameModelAndShip.lastCall);
+            assertEquals("DOWN", TestGameModelAndShip.lastCall);
         }
 
     }
@@ -266,7 +266,7 @@ public class GameControllerTest {
             TestGameModelAndShip.lastCall = null;
             controller = new GameController(new TestUI(), new TestGameModelAndShip(), new TestAchievementManager());
             controller.handlePlayerInput(input);
-            assertEquals("Fails due to" + input, "LEFT and some collision", TestGameModelAndShip.lastCall);
+            assertEquals("LEFT", TestGameModelAndShip.lastCall);
         }
 
     }
@@ -278,7 +278,7 @@ public class GameControllerTest {
             TestGameModelAndShip.lastCall = null;
             controller = new GameController(new TestUI(), new TestGameModelAndShip(), new TestAchievementManager());
             controller.handlePlayerInput(input);
-            assertEquals("Fails due to" + input, "RIGHT and some collision", TestGameModelAndShip.lastCall);
+            assertEquals("RIGHT", TestGameModelAndShip.lastCall);
         }
 
     }

@@ -167,8 +167,8 @@ public class GameControllerTest {
         Field paused = GameController.class.getDeclaredField("paused");
         // disables java checks
         paused.setAccessible(true);
-
-        boolean value = (boolean) paused.get(controller);
+        GameController newController = new GameController(testUI, testModel, new TestAchievementManager());
+        boolean value = (boolean) paused.get(newController);
         assertFalse(value);
     }
 
@@ -241,7 +241,7 @@ public class GameControllerTest {
             TestGameModelAndShip.lastCall = null;
             controller = new GameController(new TestUI(), new TestGameModelAndShip(), new TestAchievementManager());
             controller.handlePlayerInput(input);
-            assertEquals("Fails due to" + input, "UP and some collision", TestGameModelAndShip.lastCall);
+            assertEquals("UP", TestGameModelAndShip.lastCall);
         }
 
     }

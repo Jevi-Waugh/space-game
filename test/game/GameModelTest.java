@@ -40,25 +40,21 @@ public class GameModelTest {
 
     @Before
     public void setUp() {
-
         testUI = new TestUI();
         Logger logger = testUI::log;
         model = new GameModel(logger, new PlayerStatsTracker(0L));
 
-
-        // Create a default ship and make health 0
-        ship = new Ship();
-        ship.takeDamage(100);
-
-
+        // Directly fetch model's ship and store it
         try {
-            java.lang.reflect.Field f = GameModel.class.getDeclaredField("ship");
+            Field f = GameModel.class.getDeclaredField("ship");
             f.setAccessible(true);
-            f.set(model, ship);
+            ship = (Ship) f.get(model);
+            ship.takeDamage(100);
         } catch (Exception e) {
             fail("Reflection failed: " + e.getMessage());
         }
     }
+
 
     //------------CHECKING GAME OVER---------------------
     @Test
@@ -175,7 +171,6 @@ public class GameModelTest {
     }
 
 
-
     @Test
     public void testLevelUpAndSpawnRateIncrement() throws Exception {
         ship.addScore(getLevel() * getScoreThreshold());
@@ -206,6 +201,8 @@ public class GameModelTest {
 
         assertTrue(testUI.logs.isEmpty());
     }
+
+
 
 
 

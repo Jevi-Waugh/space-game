@@ -34,9 +34,9 @@ public class Ship extends Controllable {
      * By default, a ship should be at position x = 5 and y = 10, with 100 points of health.<br>
      */
     public Ship() {
-        // this(STARTING_X, STARTING_Y, STARTING_HEALTH);
-        super(STARTING_X, STARTING_Y);
-        this.health = STARTING_HEALTH;
+        this(STARTING_X, STARTING_Y, STARTING_HEALTH);
+        //  super(STARTING_X, STARTING_Y);
+        // this.health = STARTING_HEALTH;
     }
 
     /**

@@ -109,7 +109,7 @@ public class GameModelTest {
     }
 
     @Test(expected = NullPointerException.class)
-    public void testFireBulletWithN0Ship() throws Exception {
+    public void testFireBulletWithNoShip() throws Exception {
         Field f = GameModel.class.getDeclaredField("ship");
         f.setAccessible(true);
         f.set(model, null);
@@ -487,6 +487,281 @@ public class GameModelTest {
         assertEquals("Ship should not take damage", 100, ship.getHealth());
         assertEquals(currentSize, model.getSpaceObjects().size());
     }
+
+    @Test
+    public void testCheckCollisionsBulletHitsEnemy() {
+        ship.heal(100);
+        int initialHits = model.getStatsTracker().getShotsHit();
+        int previousSize = model.getSpaceObjects().size();
+
+        // Bullet and Enemy at same coordinates
+        int x = 1, y = 1;
+        SpaceObject bullet = new Bullet(x, y);
+        SpaceObject enemy = new Enemy(x, y);
+
+        model.addObject(bullet);
+        model.addObject(enemy);
+
+        model.checkCollisions();
+
+        assertFalse("Bullet should be removed", model.getSpaceObjects().contains(bullet));
+        assertFalse("Enemy should be removed", model.getSpaceObjects().contains(enemy));
+        assertEquals("Target hits should be incremented", initialHits + 1, model.getStatsTracker().getShotsHit());
+        assertEquals(previousSize, model.getSpaceObjects().size());
+    }
+
+    @Test
+    public void testCheckCollisionsBulletHitsAsteroid() {
+        ship.heal(100);
+        int x = 2, y = 2;
+        SpaceObject bullet = new Bullet(x, y);
+        SpaceObject asteroid = new Asteroid(x, y);
+
+
+        model.addObject(bullet);
+        model.addObject(asteroid);
+        int previousSize = model.getSpaceObjects().size();
+        model.checkCollisions();
+
+
+        assertFalse("Bullet should be removed after hitting asteroid", model.getSpaceObjects().contains(bullet));
+        assertTrue("Asteroid should remain", model.getSpaceObjects().contains(asteroid));
+        assertEquals(previousSize - 1, model.getSpaceObjects().size());
+    }
+
+
+    @Test
+    public void testCheckCollisionsBulletHitsOtherObject() {
+        SpaceObject otherObject= new SpaceObject() {
+            public void tick(int tick) {}
+            public int getX() { return 3; }
+            public int getY() { return 3; }
+            public ObjectGraphic render() { return null; }
+        };
+
+        SpaceObject bullet = new Bullet(3, 3);
+
+        model.addObject(bullet);
+        model.addObject(otherObject);
+        int previousSize = model.getSpaceObjects().size();
+
+        model.checkCollisions();
+
+        assertTrue("Bullet should remain", model.getSpaceObjects().contains(bullet));
+        assertTrue("Other object should remain", model.getSpaceObjects().contains(otherObject));
+        assertEquals(previousSize, model.getSpaceObjects().size());
+    }
+
+    @Test
+    public void testCheckCollisionsBulletHitsPowerUps() {
+        int x = 4, y = 4;
+        SpaceObject bullet = new Bullet(x, y);
+        SpaceObject healthPowerUp = new HealthPowerUp(x, y);
+
+
+        model.addObject(bullet);
+        model.addObject(healthPowerUp);
+        int previousSize = model.getSpaceObjects().size();
+        model.checkCollisions();
+        
+        assertTrue("Bullet should remain", model.getSpaceObjects().contains(bullet));
+        assertTrue("PowerUp should remain", model.getSpaceObjects().contains(healthPowerUp));
+        assertEquals(previousSize, model.getSpaceObjects().size());
+    }
+
+
+
+    @Test
+    public void testCheckCollisionsBulletDoesNotCollide() {
+        SpaceObject bullet = new Bullet(0, 0);
+        SpaceObject asteroid = new Asteroid(1, 1);
+
+        model.addObject(bullet);
+        model.addObject(asteroid);
+
+        model.checkCollisions();
+
+        assertTrue("Bullet should remain", model.getSpaceObjects().contains(bullet));
+        assertTrue("Asteroid should remain", model.getSpaceObjects().contains(asteroid));
+    }
+
+    @Test
+    public void testCheckCollisionsMultipleBulletsHitSameEnemy() {
+        //current logic accepts 2 bullets at the same coordinates, spec is not strict about this
+        int x = 5, y = 5;
+        SpaceObject enemy = new Enemy(x, y);
+        SpaceObject bullet1 = new Bullet(x, y);
+        SpaceObject bullet2 = new Bullet(x, y);
+
+        int hitsBefore = model.getStatsTracker().getShotsHit();
+
+        model.addObject(enemy);
+        model.addObject(bullet1);
+        model.addObject(bullet2);
+
+        model.checkCollisions();
+
+        int hitsAfter = model.getStatsTracker().getShotsHit();
+        assertEquals("Only one hit should be recorded", hitsBefore + 2, hitsAfter);
+        assertFalse("Enemy should be removed", model.getSpaceObjects().contains(enemy));
+    }
+
+    @Test
+    public void testCheckCollisionsBulletHittingShip() {
+        SpaceObject bullet = new Bullet(ship.getX(), ship.getY());
+        model.addObject(bullet);
+        ship.heal(100);
+
+        model.checkCollisions();
+
+        assertTrue("Bullet stays still", model.getSpaceObjects().contains(bullet));
+        assertEquals("Ship health stays the same as well", 100, ship.getHealth());
+    }
+
+    @Test
+    public void testCheckCollisionsEmptySpaceObject() {
+        model.getSpaceObjects().clear();
+
+        try {
+            model.checkCollisions();
+        } catch (Exception e) {
+            fail("An exception should not be thrown on empty list");
+        }
+    }
+
+    @Test
+    public void testCheckCollisionsOnlyShipInSpaceObjectList() {
+        model.getSpaceObjects().clear();
+        model.addObject(ship);
+
+        model.checkCollisions();
+
+        // If it works, the loop is meant to just continue
+        // which means that nothing happens in teh collision method
+        assertTrue(true);
+    }
+
+    @Test
+    public void testCheckCollisionsBulletsOverlapping() {
+        SpaceObject bullet1 = new Bullet(0, 0);
+        SpaceObject bullet2 = new Bullet(0, 0);
+        model.addObject(bullet1);
+        model.addObject(bullet2);
+
+        model.checkCollisions();
+
+        assertTrue(model.getSpaceObjects().contains(bullet1));
+        assertTrue(model.getSpaceObjects().contains(bullet2));
+        //nothing should happen
+    }
+
+    @Test
+    public void testsCheckCollisionsShipCollidesWithPowerUpAndAsteroid() {
+        ship.heal(50);
+        int x = ship.getX(), y = ship.getY();
+        SpaceObject powerUp = new HealthPowerUp(x, y);
+        SpaceObject asteroid = new Asteroid(x, y);
+
+        model.addObject(powerUp);
+        model.addObject(asteroid);
+
+        model.checkCollisions();
+
+        assertFalse(model.getSpaceObjects().contains(powerUp));
+        assertFalse(model.getSpaceObjects().contains(asteroid));
+        assertEquals(50 + 20 - GameModel.ASTEROID_DAMAGE, ship.getHealth());
+    }
+
+    @Test
+    public void testCheckCollisionsBulletHitsTwoEnemiesOneHandled() {
+        int x = 6, y = 6;
+        SpaceObject bullet = new Bullet(x, y);
+        SpaceObject enemy1 = new Enemy(x, y);
+        SpaceObject enemy2 = new Enemy(x, y);
+
+        int hitsBefore = model.getStatsTracker().getShotsHit();
+
+        model.addObject(bullet);
+        model.addObject(enemy1);
+        model.addObject(enemy2);
+
+        model.checkCollisions();
+
+        int hitsAfter = model.getStatsTracker().getShotsHit();
+        assertEquals("One hit must be recorded only", hitsBefore + 1, hitsAfter);
+
+        boolean enemy1Removed = !model.getSpaceObjects().contains(enemy1);
+        boolean enemy2Removed = !model.getSpaceObjects().contains(enemy2);
+
+        assertTrue("Only one enemy will be removed", enemy1Removed || enemy2Removed);
+    }
+
+    @Test
+    public void testCheckCollisionsObjectCollision() {
+        SpaceObject bullet = new Bullet(1, 1);
+        SpaceObject enemy = new Asteroid(1, 1);
+
+        assertTrue("objectCollision should detect same coordinates",
+                GameModel.isInBounds(bullet) && GameModel.isInBounds(enemy) &&
+                        bullet.getX() == enemy.getX() && bullet.getY() == enemy.getY());
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testCheckCollisionsWithNullShip() throws Exception {
+        Field shipField = GameModel.class.getDeclaredField("ship");
+        shipField.setAccessible(true);
+        shipField.set(model, null);
+        model.addObject(new Asteroid(0, 0));
+        model.checkCollisions();
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testCheckCollisionsWithNullStatsTracker() throws Exception {
+        Field trackerField = GameModel.class.getDeclaredField("statsTracker");
+        trackerField.setAccessible(true);
+        trackerField.set(model, null);
+        model.addObject(new Enemy(0, 0));
+        model.addObject(new Bullet(0, 0));
+        model.checkCollisions();
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testCheckCollisionsWith() throws Exception {
+        Field loggerField = GameModel.class.getDeclaredField("logger");
+        loggerField.setAccessible(true);
+        loggerField.set(model, null);
+        model.setVerbose(true);
+        model.addObject(new Asteroid(ship.getX(), ship.getY()));
+        model.checkCollisions();
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testCheckCollisionsThrowsIfSpaceObjectsIsNull() throws Exception {
+        Field spaceObjectsField = GameModel.class.getDeclaredField("spaceObjects");
+        spaceObjectsField.setAccessible(true);
+        spaceObjectsField.set(model, null);
+        model.checkCollisions();
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

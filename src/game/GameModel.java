@@ -276,7 +276,6 @@ public class GameModel {
         // Core.Bullet starts just above the ship
         spaceObjects.add(new Bullet(bulletX, bulletY));
         // spec does not say to do the following
-        // statsTracker.recordShotFired();
         // logger.log("Core.Bullet fired!");
 
     }
@@ -320,10 +319,13 @@ public class GameModel {
 
     /**
      * Handles Enemy collisions with the given space objects
+
      * @param toRemove the list that contains spaceObjects to be removed
      * @param bullet the bullet
      * @param enemy the enemy
-     * @requires
+     * @requires bullet != null && enemy != null && statsTracker != null
+     * @ensures   if a Bullet collides with an Enemy, then the Bullet and Enemy are both removed,
+     *            record the shot through the statsTracker
      */
     private void handleEnemyCollision(List<SpaceObject> toRemove, SpaceObject bullet,
                                       SpaceObject enemy) {
@@ -342,6 +344,8 @@ public class GameModel {
      *      - For any collisions with the Ship, the colliding object should be removed.
      * @param toRemove the list that has spaceObjects to be removed
      * @param spaceObject the collided spaceObject
+     * @requires ship != null && spaceObject != null
+     * @ensures - For any spaceObject colliding with the ship, the colliding spaceObject is removed
      */
     private void shipCollision(List<SpaceObject> toRemove, SpaceObject spaceObject) {
 
@@ -362,6 +366,8 @@ public class GameModel {
      *      - If a Bullet collides with an Asteroid, remove just the Bullet. No logging required.
      * @param toRemove the list that has spaceObjects to be removed
      * @param bullet  the collided spaceObject
+     * @requires bullet != null
+     * @ensures - if a Bullet collides with an Asteroid, the Bullet is removed.
      */
     private void bulletCollision(List<SpaceObject> toRemove, SpaceObject bullet) {
         for (SpaceObject spaceObject : spaceObjects) {
@@ -373,8 +379,14 @@ public class GameModel {
             if (objectCollision(bullet, spaceObject)) {
                 switch (spaceObject) {
                     // using enemy here instead of spaceObject in param of func
-                    case Enemy enemy -> handleEnemyCollision(toRemove, bullet, enemy);
-                    case Asteroid asteroid -> toRemove.add(bullet);
+                    case Enemy enemy -> {
+                        handleEnemyCollision(toRemove, bullet, enemy);
+                        return;
+                    }
+                    case Asteroid asteroid -> {
+                        toRemove.add(bullet);
+                        return;
+                    }
                     default -> { }
                 }
             }
@@ -383,14 +395,9 @@ public class GameModel {
 
     /**
      * Detects and handles collisions between spaceObjects (Ship and Bullet collisions).
-     * @requires SpaceObject != null && ship != null && statsTracker != null && logger != null
+     * @requires SpaceObject != null && ship != null
      * @ensures - collisions are detected through the objectCollision method and
      *          - collisions are resolved according to spaceObject type and results in healing or taken damage.
-     *          - For any spaceObject colliding with the ship, the colliding spaceObject is removed
-     *          - if verbose == true then, log a message corresponding to the collision and other spaceObject.
-     *          - if a Bullet collides with an Enemy, then the Bullet and Enemy are both removed,
-     *                  record the shot through the statsTracker
-     *          - if a Bullet collides with an Asteroid, the Bullet is removed.
      */
     public void checkCollisions() {
         List<SpaceObject> toRemove = new ArrayList<>();

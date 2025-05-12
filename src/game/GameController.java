@@ -77,6 +77,7 @@ public class GameController {
      */
     public GameController(UI ui, AchievementManager achievementManager) {
         this(ui, new GameModel(ui::log, new PlayerStatsTracker()), achievementManager);
+
     }
 
     /**
